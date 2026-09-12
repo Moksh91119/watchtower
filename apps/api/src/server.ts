@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
+import { monitorRoutes } from "./routes/monitors.js";
 
 const app = Fastify({
   logger: true,
@@ -14,6 +15,10 @@ app.get("/health", async () => {
     status: "ok",
     service: "watchtower-api",
   };
+});
+
+await app.register(monitorRoutes, {
+  prefix: "/api",
 });
 
 const port = Number(process.env.PORT) || 4000;
