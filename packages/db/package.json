@@ -1,21 +1,19 @@
 {
   "name": "@watchtower/db",
-  "version": "1.0.0",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "push": "drizzle-kit push",
-    "studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "drizzle-orm": "^0.45.2",
-    "postgres": "^3.4.9"
-  },
   "devDependencies": {
+    "@types/node": "^20.19.43",
     "drizzle-kit": "^0.31.10"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2"
   }
 }

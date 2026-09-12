@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.15.0",
   "scripts": {
     "dev": "pnpm --parallel --filter './apps/*' dev",
-    "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "build": "pnpm --recursive build",
+    "lint": "pnpm --recursive lint",
+    "typecheck": "pnpm --recursive typecheck"
   }
 }

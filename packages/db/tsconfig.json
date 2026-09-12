@@ -5,7 +5,11 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"],
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": true
   },
-  "include": ["src"]
+  "include": ["src/**/*.ts", "drizzle.config.ts"]
 }

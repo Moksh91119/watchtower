@@ -1,13 +1,13 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
 
 const app = Fastify({
   logger: true,
 });
 
-await app.register(cors, {
-  origin: true,
-});
+await app.register(cors);
+await app.register(helmet);
 
 app.get("/health", async () => {
   return {
@@ -18,7 +18,7 @@ app.get("/health", async () => {
 
 const port = Number(process.env.PORT) || 4000;
 
-app.listen({
+await app.listen({
   port,
   host: "0.0.0.0",
 });

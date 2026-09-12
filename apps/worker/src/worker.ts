@@ -1,5 +1,5 @@
 console.log("Watchtower worker started");
 
 setInterval(() => {
-  console.log("Worker heartbeat:", new Date().toISOString());
+  console.log("Worker heartbeat");
 }, 30000);
