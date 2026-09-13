@@ -1,5 +1,5 @@
 import { changes, checks, db, monitors, snapshots } from "@watchtower/db";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { fetchMonitorContent } from "./fetcher.js";
 import { detectChange } from "./change-detector.js";
 
@@ -25,14 +25,16 @@ export async function runMonitor(monitorId: string) {
     const previousSnapshots = await db
       .select()
       .from(snapshots)
-      .where(eq(snapshots.monitorId, monitor.id));
+      .where(eq(snapshots.monitorId, monitor.id))
+      .orderBy(desc(snapshots.createdAt))
+      .limit(1);
 
     const changed =
       previousSnapshots.length > 0 &&
       previousSnapshots[previousSnapshots.length - 1].contentHash !==
         result.contentHash;
 
-    const previousSnapshot = previousSnapshots[previousSnapshots.length - 1];
+    const previousSnapshot = previousSnapshots[0];
 
     const [check] = await db
       .insert(checks)
@@ -90,13 +92,25 @@ export async function runMonitor(monitorId: string) {
       contentHash: result.contentHash,
     };
   } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
     await db.insert(checks).values({
       monitorId: monitor.id,
       status: "failed",
       changed: false,
       responseTimeMs: Date.now() - startedAt,
-      errorMessage: error instanceof Error ? error.message : "Unknown error",
+      errorMessage,
     });
+
+    await db
+      .update(monitors)
+      .set({
+        lastCheckedAt: new Date(),
+        nextCheckAt: new Date(Date.now() + 15 * 60 * 1000),
+        updatedAt: new Date(),
+      })
+      .where(eq(monitors.id, monitor.id));
 
     throw error;
   }
