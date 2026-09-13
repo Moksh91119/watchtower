@@ -10,7 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.1",
+    "@fastify/jwt": "^10.2.2",
     "@watchtower/db": "workspace:*",
-    "@watchtower/shared": "workspace:*"
+    "@watchtower/shared": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.2",
+    "fastify": "^5.12.4",
+    "fastify-plugin": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0"
   }
 }

@@ -4,12 +4,23 @@ import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
 export async function monitorRoutes(app: FastifyInstance) {
-  app.get("/monitors", async () => {
-    return db.select().from(monitors);
-  });
+  app.get(
+    "/monitors",
+    {
+      onRequest: [app.authenticate],
+    },
+    async (request) => {
+      const { userId } = request.user as { userId: string };
+
+      return db.select().from(monitors).where(eq(monitors.userId, userId));
+    },
+  );
 
   app.get<{ Params: { id: string } }>(
     "/monitors/:id",
+    {
+      onRequest: [app.authenticate],
+    },
     async (request, reply) => {
       const result = await db
         .select()
@@ -26,48 +37,51 @@ export async function monitorRoutes(app: FastifyInstance) {
     },
   );
 
-  app.post("/monitors", async (request, reply) => {
-    const parsed = createMonitorSchema.safeParse(request.body);
+  app.post(
+    "/monitors",
+    {
+      onRequest: [app.authenticate],
+    },
+    async (request, reply) => {
+      const parsed = createMonitorSchema.safeParse(request.body);
 
-    if (!parsed.success) {
-      return reply.code(400).send({
-        error: "Invalid monitor data",
-        details: parsed.error.flatten(),
-      });
-    }
+      if (!parsed.success) {
+        return reply.code(400).send({
+          error: "Invalid monitor data",
+          details: parsed.error.flatten(),
+        });
+      }
 
-    const data = parsed.data;
+      const data = parsed.data;
 
-    const nextCheckAt = new Date(
-      Date.now() + data.frequencyMinutes * 60 * 1000,
-    );
+      const nextCheckAt = new Date(
+        Date.now() + data.frequencyMinutes * 60 * 1000,
+      );
 
-    const userId = process.env.DEV_USER_ID;
+      const { userId } = request.user as { userId: string };
 
-    if (!userId) {
-      return reply.code(500).send({
-        error: "DEV_USER_ID is not configured",
-      });
-    }
+      const result = await db
+        .insert(monitors)
+        .values({
+          userId,
+          name: data.name,
+          url: data.url,
+          monitoringMode: data.monitoringMode,
+          selector: data.selector,
+          frequencyMinutes: data.frequencyMinutes,
+          nextCheckAt,
+        })
+        .returning();
 
-    const result = await db
-      .insert(monitors)
-      .values({
-        userId,
-        name: data.name,
-        url: data.url,
-        monitoringMode: data.monitoringMode,
-        selector: data.selector,
-        frequencyMinutes: data.frequencyMinutes,
-        nextCheckAt,
-      })
-      .returning();
-
-    return reply.code(201).send(result[0]);
-  });
+      return reply.code(201).send(result[0]);
+    },
+  );
 
   app.patch<{ Params: { id: string } }>(
     "/monitors/:id",
+    {
+      onRequest: [app.authenticate],
+    },
     async (request, reply) => {
       const parsed = updateMonitorSchema.safeParse(request.body);
 
@@ -99,6 +113,9 @@ export async function monitorRoutes(app: FastifyInstance) {
 
   app.delete<{ Params: { id: string } }>(
     "/monitors/:id",
+    {
+      onRequest: [app.authenticate],
+    },
     async (request, reply) => {
       const result = await db
         .delete(monitors)
