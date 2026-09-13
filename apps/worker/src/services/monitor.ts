@@ -2,6 +2,7 @@ import { changes, checks, db, monitors, snapshots } from "@watchtower/db";
 import { desc, eq } from "drizzle-orm";
 import { fetchMonitorContent } from "./fetcher.js";
 import { detectChange } from "./change-detector.js";
+import { notifyChange } from "./notification.js";
 
 export async function runMonitor(monitorId: string) {
   const [monitor] = await db
@@ -65,15 +66,27 @@ export async function runMonitor(monitorId: string) {
         currentSnapshot.contentText,
       );
 
-      await db.insert(changes).values({
-        monitorId: monitor.id,
-        previousSnapshotId: previousSnapshot.id,
-        currentSnapshotId: currentSnapshot.id,
-        additions: change.additions,
-        removals: change.removals,
-        changePercentage: change.changePercentage,
-        severity: change.severity,
-      });
+      const [createdChange] = await db
+        .insert(changes)
+        .values({
+          monitorId: monitor.id,
+          previousSnapshotId: previousSnapshot.id,
+          currentSnapshotId: currentSnapshot.id,
+          additions: change.additions,
+          removals: change.removals,
+          changePercentage: change.changePercentage,
+          severity: change.severity,
+        })
+        .returning();
+
+      try {
+        await notifyChange(createdChange.id);
+      } catch (error) {
+        console.error(
+          `Failed to send notification for change ${createdChange.id}:`,
+          error,
+        );
+      }
     }
 
     await db
