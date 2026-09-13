@@ -1,5 +1,3 @@
-console.log("Watchtower worker started");
+export { fetchMonitorContent } from "./services/fetcher.js";
 
-setInterval(() => {
-  console.log("Worker heartbeat");
-}, 30000);
+console.log("Watchtower worker started");

@@ -8,5 +8,11 @@
     "build": "tsc",
     "start": "node dist/worker.js",
     "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@watchtower/db": "workspace:*",
+    "@watchtower/shared": "workspace:*",
+    "cheerio": "^1.2.0",
+    "drizzle-orm": "^0.45.2"
   }
 }
