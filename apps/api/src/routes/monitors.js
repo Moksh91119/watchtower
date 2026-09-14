@@ -8,7 +8,7 @@ export async function monitorRoutes(app) {
         const { userId } = request.user;
         return db.select().from(monitors).where(eq(monitors.userId, userId));
     });
-    app.get("/dashboard", {
+    app.get("/monitors/dashboard", {
         onRequest: [app.authenticate],
     }, async (request) => {
         const { userId } = request.user;

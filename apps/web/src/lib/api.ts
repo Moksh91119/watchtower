@@ -36,7 +36,9 @@ export async function api<T>(
       // Ignore invalid error responses.
     }
 
-    throw new Error(message);
+    const error = new Error(message);
+    (error as Error & { status?: number }).status = response.status;
+    throw error;
   }
 
   if (response.status === 204) {

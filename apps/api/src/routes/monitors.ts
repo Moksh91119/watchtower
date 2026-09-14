@@ -17,7 +17,7 @@ export async function monitorRoutes(app: FastifyInstance) {
   );
 
   app.get(
-    "/dashboard",
+    "/monitors/dashboard",
     {
       onRequest: [app.authenticate],
     },
