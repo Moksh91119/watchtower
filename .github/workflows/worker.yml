@@ -40,6 +40,5 @@ jobs:
         run: pnpm --filter @watchtower/worker start
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_SSL: "true"
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
