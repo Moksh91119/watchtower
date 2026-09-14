@@ -21,6 +21,7 @@
     "fastify-plugin": "^6.0.0"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0"
+    "@types/bcryptjs": "^3.0.0",
+    "@types/node": "^26.5.1"
   }
 }
