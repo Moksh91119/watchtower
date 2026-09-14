@@ -10,13 +10,18 @@ const app = Fastify({
   logger: true,
 });
 
+await app.register(cors, {
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+});
+
 await app.register(jwt, {
   secret: process.env.JWT_SECRET!,
 });
 
 await app.register(authPlugin);
 
-await app.register(cors);
 await app.register(helmet);
 
 app.get("/health", async () => {
