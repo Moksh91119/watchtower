@@ -12,7 +12,9 @@ export async function api<T>(
 
   const headers = new Headers(options.headers);
 
-  headers.set("Content-Type", "application/json");
+  if (fetchOptions.body) {
+    headers.set("Content-Type", "application/json");
+  }
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
@@ -37,7 +39,9 @@ export async function api<T>(
     }
 
     const error = new Error(message);
+
     (error as Error & { status?: number }).status = response.status;
+
     throw error;
   }
 
