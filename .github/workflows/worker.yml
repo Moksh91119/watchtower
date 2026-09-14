@@ -33,8 +33,16 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @watchtower/shared build
 
-      - name: Build worker
+           - name: Build worker
         run: pnpm --filter @watchtower/worker build
+
+      - name: Verify database build
+        run: |
+          echo "GITHUB_ACTIONS=$GITHUB_ACTIONS"
+          echo "--- compiled DB client ---"
+          grep -n -A 5 -B 5 "postgres(process.env.DATABASE_URL" packages/db/dist/index.js
+          echo "--- DB dist ---"
+          ls -la packages/db/dist
 
       - name: Run worker
         run: pnpm --filter @watchtower/worker start
