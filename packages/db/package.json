@@ -6,14 +6,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./schema": {
-      "types": "./dist/schema.d.ts",
-      "import": "./dist/schema.js"
-    }
+    ".": "./dist/index.js",
+    "./schema": "./dist/schema.js"
   },
   "scripts": {
     "build": "tsc",
