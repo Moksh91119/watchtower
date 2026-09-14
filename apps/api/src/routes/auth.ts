@@ -2,6 +2,7 @@ import { db, users } from "@watchtower/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import type { FastifyInstance } from "fastify";
+import { loginSchema, registerSchema } from "@watchtower/shared";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post<{
@@ -11,7 +12,16 @@ export async function authRoutes(app: FastifyInstance) {
       name: string;
     };
   }>("/register", async (request, reply) => {
-    const { email, password, name } = request.body;
+    const parsed = registerSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: "Invalid registration data",
+        details: parsed.error.flatten(),
+      });
+    }
+
+    const { email, name, password } = parsed.data;
 
     const existingUser = await db
       .select()
@@ -55,7 +65,16 @@ export async function authRoutes(app: FastifyInstance) {
       password: string;
     };
   }>("/login", async (request, reply) => {
-    const { email, password } = request.body;
+    const parsed = loginSchema.safeParse(request.body);
+
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: "Invalid login data",
+        details: parsed.error.flatten(),
+      });
+    }
+
+    const { email, password } = parsed.data;
 
     const [user] = await db.select().from(users).where(eq(users.email, email));
 

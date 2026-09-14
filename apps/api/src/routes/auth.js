@@ -1,9 +1,17 @@
 import { db, users } from "@watchtower/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { loginSchema, registerSchema } from "@watchtower/shared";
 export async function authRoutes(app) {
     app.post("/register", async (request, reply) => {
-        const { email, password, name } = request.body;
+        const parsed = registerSchema.safeParse(request.body);
+        if (!parsed.success) {
+            return reply.code(400).send({
+                error: "Invalid registration data",
+                details: parsed.error.flatten(),
+            });
+        }
+        const { email, name, password } = parsed.data;
         const existingUser = await db
             .select()
             .from(users)
@@ -35,7 +43,14 @@ export async function authRoutes(app) {
         });
     });
     app.post("/login", async (request, reply) => {
-        const { email, password } = request.body;
+        const parsed = loginSchema.safeParse(request.body);
+        if (!parsed.success) {
+            return reply.code(400).send({
+                error: "Invalid login data",
+                details: parsed.error.flatten(),
+            });
+        }
+        const { email, password } = parsed.data;
         const [user] = await db.select().from(users).where(eq(users.email, email));
         if (!user) {
             return reply.code(401).send({

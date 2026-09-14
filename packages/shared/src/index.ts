@@ -53,6 +53,20 @@ export const monitorIdSchema = z.object({
   id: z.string().uuid(),
 });
 
+export const registerSchema = z.object({
+  email: z.string().trim().email("A valid email is required"),
+  name: z.string().trim().min(1, "Name is required").max(100),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export const loginSchema = z.object({
+  email: z.string().trim().email("A valid email is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+
 export type MonitoringMode = z.infer<typeof monitoringModeSchema>;
 export type MonitorStatus = z.infer<typeof monitorStatusSchema>;
 
