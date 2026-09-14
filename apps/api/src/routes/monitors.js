@@ -1,12 +1,58 @@
-import { db, monitors } from "@watchtower/db";
+import { changes, checks, db, monitors } from "@watchtower/db";
 import { createMonitorSchema, updateMonitorSchema } from "@watchtower/shared";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 export async function monitorRoutes(app) {
     app.get("/monitors", {
         onRequest: [app.authenticate],
     }, async (request) => {
         const { userId } = request.user;
         return db.select().from(monitors).where(eq(monitors.userId, userId));
+    });
+    app.get("/dashboard", {
+        onRequest: [app.authenticate],
+    }, async (request) => {
+        const { userId } = request.user;
+        const userMonitors = await db
+            .select()
+            .from(monitors)
+            .where(eq(monitors.userId, userId));
+        const monitorIds = userMonitors.map((monitor) => monitor.id);
+        if (monitorIds.length === 0) {
+            return {
+                totalMonitors: 0,
+                activeMonitors: 0,
+                pausedMonitors: 0,
+                totalChanges: 0,
+                recentChanges: [],
+            };
+        }
+        const recentChanges = await db
+            .select({
+            id: changes.id,
+            monitorId: changes.monitorId,
+            severity: changes.severity,
+            changePercentage: changes.changePercentage,
+            additions: changes.additions,
+            removals: changes.removals,
+            createdAt: changes.createdAt,
+        })
+            .from(changes)
+            .innerJoin(monitors, eq(changes.monitorId, monitors.id))
+            .where(eq(monitors.userId, userId))
+            .orderBy(desc(changes.createdAt))
+            .limit(10);
+        const totalChanges = await db
+            .select({ id: changes.id })
+            .from(changes)
+            .innerJoin(monitors, eq(changes.monitorId, monitors.id))
+            .where(eq(monitors.userId, userId));
+        return {
+            totalMonitors: userMonitors.length,
+            activeMonitors: userMonitors.filter((monitor) => monitor.status === "active").length,
+            pausedMonitors: userMonitors.filter((monitor) => monitor.status === "paused").length,
+            totalChanges: totalChanges.length,
+            recentChanges,
+        };
     });
     app.get("/monitors/:id", {
         onRequest: [app.authenticate],
@@ -22,6 +68,46 @@ export async function monitorRoutes(app) {
             });
         }
         return result[0];
+    });
+    app.get("/monitors/:id/checks", {
+        onRequest: [app.authenticate],
+    }, async (request, reply) => {
+        const { userId } = request.user;
+        const [monitor] = await db
+            .select({ id: monitors.id })
+            .from(monitors)
+            .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)));
+        if (!monitor) {
+            return reply.code(404).send({
+                error: "Monitor not found",
+            });
+        }
+        return db
+            .select()
+            .from(checks)
+            .where(eq(checks.monitorId, monitor.id))
+            .orderBy(desc(checks.checkedAt))
+            .limit(50);
+    });
+    app.get("/monitors/:id/changes", {
+        onRequest: [app.authenticate],
+    }, async (request, reply) => {
+        const { userId } = request.user;
+        const [monitor] = await db
+            .select({ id: monitors.id })
+            .from(monitors)
+            .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)));
+        if (!monitor) {
+            return reply.code(404).send({
+                error: "Monitor not found",
+            });
+        }
+        return db
+            .select()
+            .from(changes)
+            .where(eq(changes.monitorId, monitor.id))
+            .orderBy(desc(changes.createdAt))
+            .limit(50);
     });
     app.post("/monitors", {
         onRequest: [app.authenticate],
