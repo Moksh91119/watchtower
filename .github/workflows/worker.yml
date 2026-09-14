@@ -33,7 +33,7 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @watchtower/shared build
 
-           - name: Build worker
+      - name: Build worker
         run: pnpm --filter @watchtower/worker build
 
       - name: Verify database build
