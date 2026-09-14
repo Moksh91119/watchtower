@@ -1,11 +1,12 @@
 import { runScheduler } from "./services/scheduler.js";
 
-const intervalMs = 30_000;
-
 console.log("Watchtower worker started");
 
-await runScheduler();
-
-setInterval(async () => {
+try {
   await runScheduler();
-}, intervalMs);
+  console.log("Watchtower worker finished");
+  process.exit(0);
+} catch (error) {
+  console.error("Watchtower worker failed:", error);
+  process.exit(1);
+}
