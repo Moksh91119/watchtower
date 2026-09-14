@@ -1,6 +1,6 @@
 import { db, monitors } from "@watchtower/db";
 import { createMonitorSchema, updateMonitorSchema } from "@watchtower/shared";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
 export async function monitorRoutes(app: FastifyInstance) {
@@ -22,10 +22,14 @@ export async function monitorRoutes(app: FastifyInstance) {
       onRequest: [app.authenticate],
     },
     async (request, reply) => {
+      const { userId } = request.user as { userId: string };
+
       const result = await db
         .select()
         .from(monitors)
-        .where(eq(monitors.id, request.params.id));
+        .where(
+          and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)),
+        );
 
       if (result.length === 0) {
         return reply.code(404).send({
@@ -92,13 +96,17 @@ export async function monitorRoutes(app: FastifyInstance) {
         });
       }
 
+      const { userId } = request.user as { userId: string };
+
       const result = await db
         .update(monitors)
         .set({
           ...parsed.data,
           updatedAt: new Date(),
         })
-        .where(eq(monitors.id, request.params.id))
+        .where(
+          and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)),
+        )
         .returning();
 
       if (result.length === 0) {
@@ -117,9 +125,13 @@ export async function monitorRoutes(app: FastifyInstance) {
       onRequest: [app.authenticate],
     },
     async (request, reply) => {
+      const { userId } = request.user as { userId: string };
+
       const result = await db
         .delete(monitors)
-        .where(eq(monitors.id, request.params.id))
+        .where(
+          and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)),
+        )
         .returning({ id: monitors.id });
 
       if (result.length === 0) {

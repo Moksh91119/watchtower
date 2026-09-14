@@ -1,6 +1,6 @@
 import { db, monitors } from "@watchtower/db";
 import { createMonitorSchema, updateMonitorSchema } from "@watchtower/shared";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 export async function monitorRoutes(app) {
     app.get("/monitors", {
         onRequest: [app.authenticate],
@@ -11,10 +11,11 @@ export async function monitorRoutes(app) {
     app.get("/monitors/:id", {
         onRequest: [app.authenticate],
     }, async (request, reply) => {
+        const { userId } = request.user;
         const result = await db
             .select()
             .from(monitors)
-            .where(eq(monitors.id, request.params.id));
+            .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)));
         if (result.length === 0) {
             return reply.code(404).send({
                 error: "Monitor not found",
@@ -59,13 +60,14 @@ export async function monitorRoutes(app) {
                 details: parsed.error.flatten(),
             });
         }
+        const { userId } = request.user;
         const result = await db
             .update(monitors)
             .set({
             ...parsed.data,
             updatedAt: new Date(),
         })
-            .where(eq(monitors.id, request.params.id))
+            .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)))
             .returning();
         if (result.length === 0) {
             return reply.code(404).send({
@@ -77,9 +79,10 @@ export async function monitorRoutes(app) {
     app.delete("/monitors/:id", {
         onRequest: [app.authenticate],
     }, async (request, reply) => {
+        const { userId } = request.user;
         const result = await db
             .delete(monitors)
-            .where(eq(monitors.id, request.params.id))
+            .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)))
             .returning({ id: monitors.id });
         if (result.length === 0) {
             return reply.code(404).send({
