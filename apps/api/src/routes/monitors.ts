@@ -98,12 +98,21 @@ export async function monitorRoutes(app: FastifyInstance) {
 
       const { userId } = request.user as { userId: string };
 
+      const updateData = {
+        ...parsed.data,
+        updatedAt: new Date(),
+        ...(parsed.data.frequencyMinutes !== undefined
+          ? {
+              nextCheckAt: new Date(
+                Date.now() + parsed.data.frequencyMinutes * 60 * 1000,
+              ),
+            }
+          : {}),
+      };
+
       const result = await db
         .update(monitors)
-        .set({
-          ...parsed.data,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(
           and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)),
         )

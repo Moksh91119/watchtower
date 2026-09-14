@@ -22,25 +22,37 @@ export async function authRoutes(app) {
             });
         }
         const passwordHash = await bcrypt.hash(password, 12);
-        const [user] = await db
-            .insert(users)
-            .values({
-            email,
-            name,
-            passwordHash,
-        })
-            .returning({
-            id: users.id,
-            email: users.email,
-            name: users.name,
-        });
-        const token = await app.jwt.sign({
-            userId: user.id,
-        });
-        return reply.code(201).send({
-            user,
-            token,
-        });
+        try {
+            const [user] = await db
+                .insert(users)
+                .values({
+                email,
+                name,
+                passwordHash,
+            })
+                .returning({
+                id: users.id,
+                email: users.email,
+                name: users.name,
+                createdAt: users.createdAt,
+            });
+            const token = await app.jwt.sign({
+                userId: user.id,
+            });
+            return reply.code(201).send({
+                user,
+                token,
+            });
+        }
+        catch (error) {
+            if (error instanceof Error &&
+                error.message.includes("users_email_unique")) {
+                return reply.code(409).send({
+                    error: "An account with this email already exists",
+                });
+            }
+            throw error;
+        }
     });
     app.post("/login", async (request, reply) => {
         const parsed = loginSchema.safeParse(request.body);

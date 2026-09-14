@@ -61,12 +61,18 @@ export async function monitorRoutes(app) {
             });
         }
         const { userId } = request.user;
-        const result = await db
-            .update(monitors)
-            .set({
+        const updateData = {
             ...parsed.data,
             updatedAt: new Date(),
-        })
+            ...(parsed.data.frequencyMinutes !== undefined
+                ? {
+                    nextCheckAt: new Date(Date.now() + parsed.data.frequencyMinutes * 60 * 1000),
+                }
+                : {}),
+        };
+        const result = await db
+            .update(monitors)
+            .set(updateData)
             .where(and(eq(monitors.id, request.params.id), eq(monitors.userId, userId)))
             .returning();
         if (result.length === 0) {

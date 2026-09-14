@@ -45,9 +45,29 @@ export const createMonitorSchema = monitorFields.superRefine(
   validateMonitorFields,
 );
 
-export const updateMonitorSchema = monitorFields
+export const updateMonitorSchema = createMonitorSchema
   .partial()
-  .superRefine(validateMonitorFields);
+  .superRefine((data, ctx) => {
+    if (data.monitoringMode === "selector" && !data.selector) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["selector"],
+        message: "Selector is required for selector monitoring",
+      });
+    }
+
+    if (
+      data.monitoringMode !== undefined &&
+      data.monitoringMode !== "selector" &&
+      data.selector !== undefined
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["selector"],
+        message: "Selector is only allowed in selector mode",
+      });
+    }
+  });
 
 export const monitorIdSchema = z.object({
   id: z.string().uuid(),
